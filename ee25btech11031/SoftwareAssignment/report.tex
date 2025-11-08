@@ -1,0 +1,632 @@
+\documentclass[a4paper,12pt]{article}
+
+% --- Required Custom Packages ---
+
+
+% --- Template Specific Packages ---
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[protrusion=true,expansion=true]{microtype}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{txfonts}
+\usepackage{parskip}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{mathtools}
+\usepackage{gvv-book}
+\usepackage{gvv}
+\usepackage{gensymb}
+\usepackage{comment}
+\usepackage[breaklinks=true]{hyperref}
+\usepackage{tkz-euclide} 
+\usepackage{listings}                                      
+\def\inputGnumericTable{}                                 
+\usepackage[latin1]{inputenc}                                
+\usepackage{color}                                            
+\usepackage{array}                                            
+\usepackage{longtable}
+\usepackage{multicol}
+\usepackage{calc}                                             
+\usepackage{multirow}                                         
+\usepackage{hhline}                                           
+\usepackage{ifthen}                                           
+\usepackage{lscape}
+\usepackage{float}
+\usepackage{listings}
+\usepackage[ruled,vlined]{algorithm2e}  
+
+
+% --- NUMBERING SETUP ---
+\setcounter{secnumdepth}{-1}
+
+% --- DOCUMENT VARIABLES ---
+% Defined here so they can be used automatically in the Title AND Header
+\newcommand{\ReportTitle}{Image Compression Using Truncated SVD}
+\newcommand{\AuthorName}{K. Sai Sreevallabh - EE25BTECH11031}
+
+% --- HEADER & FOOTER SETUP ---
+\pagestyle{fancy}
+\fancyhf{} % Clear all standard header/footer fields
+\renewcommand{\headrulewidth}{0.2pt} % Very thin line. Set to 0pt to remove completely.
+\renewcommand{\footrulewidth}{0pt}   % No line for footer
+
+% Setup for Header (Currently Active)
+\fancyhead[L]{\small \itshape \ReportTitle} % Left: Title in italics
+\fancyhead[R]{\small \thepage}              % Right: Page number
+
+% Alternative: Setup for Footer (If you prefer this, comment out the \fancyhead lines above and uncomment these)
+% \fancyfoot[L]{\small \itshape \ReportTitle}
+% \fancyfoot[R]{\small \thepage}
+
+% --- Title Setup ---
+\title{\textbf{\ReportTitle}}
+\author{\AuthorName}
+\date{\today}
+
+\begin{document}
+% Renders title
+{\let\newpage\relax\maketitle}
+
+% FORCE HEADER ON FIRST PAGE:
+% Standard LaTeX disables headers on the title page.
+% Uncomment the next line if you WANT the header on the very first page:
+ \thispagestyle{fancy}
+
+\hrule
+\vspace{1.5em}
+
+\section{Overview}
+
+Grayscale images are made up of pixels whose pixel intensity values range from $0$ (black) to $255$ (white). The grayscale image can be represented as a matrix $A \in \mathbb{R}^{m \times n}$ where each entry of the matrix corresponds to the pixel intensity value. \\
+
+A low-rank approximation can be obtained by only keeping the top-$k$ singular values of $A$ as given below:
+$$ A_k = U_k\Sigma_kV_k$$
+
+The above expression corresponds to a truncated Singular Value Decomposition of $A$ and it forms the basis for image compression. 
+\\
+\begin{center}
+    \rule{10cm}{0.4pt}
+\end{center}
+\section{Singular Value Decomposition} \textbf{[A Summary of Gilbert Strang's Lecture]}\\
+
+\subsection{1. Introduction}
+The idea behind the Singular Value Decomposition is the mapping of an orthogonal basis in the row-space of any rectangular matrix $\vec{A} \in \mathbb{R}$ to an orthogonal basis of its column-space. We find a special set of orthogonal input axes that A transforms into an orthogonal output axes.\\
+
+Given a rectangular matrix $A \in \mathbb{R}^{m \times n}$ of rank $r$, consider a unit vector $\vec{v_1}$ to be in its row-space. There exists a unit vector $\vec{u_1}$ in the column-space of $\vec{A}$ such that 
+$$\vec{Av_1} = \sigma_1\vec{u_1}$$
+
+Considering another unit vector $\vec{v_2}$, orthogonal to $\vec{v_1}$ in the row-space of $\vec{A}$, the vector $\vec{u_2}$ is given by
+$$\vec{Av_2} = \sigma_2\vec{u_2}$$
+and is orthogonal to $\vec{u_1}$.
+
+Following such a process we can find $r$ linearly independent vectors in the row-space and the column-space and represent it in matrix form as 
+$$\vec{AV} = \vec{U\Sigma}$$
+where\\ 
+$\vec{V} = \myvec{\vec{v_1}&\vec{v_2}& \dots &\vec{v_r}}$   \ \ \ \ \ \     $\vec{U} = \myvec{\vec{u_1}&\vec{u_2}& \dots &\vec{u_r}}$  \ \ \ \ \ and\ \ \  $\vec{\Sigma} =
+\myvec{\sigma_1 & 0 & \cdots & 0 \\
+    0 & \sigma_2 & \cdots & 0 \\
+    \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \cdots & \sigma_r} $   \\
+
+However, we can also include the vectors present in the null-space into this. It will not affect the orthogonality of $\vec{V}$ because the null-space is always perpendicular to the row-space. All the corresponding $\sigma$ values become zero and we can consider any set of $m-r$ vectors in $\vec{U}$ to make it an $m \times m$ matrix. Typically, we consider the null-space of $\vec{A^\top}$.
+Then, we get\\
+$\vec{V} = \myvec{\vec{v_1}&\vec{v_2}& \dots &\vec{v_n}}$   \ \ \ \ \ \     $\vec{U} = \myvec{\vec{u_1}&\vec{u_2}& \dots &\vec{u_n}}$  \ \ \ \ \ and\ \ \  $\vec{\Sigma} =
+\myvec{\sigma_1 & 0 & \cdots & 0 \\
+    0 & \sigma_2 & \cdots & 0 \\
+    \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \cdots & \sigma_n} $   \\
+
+\subsection{2. Finding the SVD}
+
+For computing the singular value decomposition of a matrix, two orthogonal matrices $\vec{U}$ and $\vec{V}$ must be found first. To find $\vec{V}$, $\vec{U}$ is eliminated by doing the following
+\begin{align*}
+    \vec{A}^\top \vec{A} &= \vec{V} \vec{\Sigma}^\top \vec{U}^\top \vec{U} \vec{\Sigma} \vec{V}^\top \\
+    &= \vec{V} (\vec{\Sigma}^\top \vec{\Sigma}) \vec{V}^\top \ \ \  \ \ \ (\text{since $\vec{U}$ is orthogonal})\\
+    &= \vec{V} (\vec{\Sigma}^2) \vec{V}^T \ \ \  \ \ \ (\text{since $\vec{\Sigma}$ is diagonal})
+\end{align*}
+
+The above is the Spectral Decomposition of the symmetric matrix $\vec{A^\top A}$.
+Eigenvalues can be calculated by reducing $\vec{A^\top A}$ into an upper triangular matrix and for each eigenvalue, the corresponding eigenvector (in normalised form) becomes an entry in the matrix $\vec{V}$.
+
+$\sigma_1^2, \sigma_2^2, \dots \sigma_n^2$ are the eigenvalues of $\vec{A^\top A}$. Out of these only the first $r$ are non-zero. 
+
+Similarly, for finding $\vec{U}$, we eliminate $\vec{V}$, giving us
+$$\vec{A} \vec{A}^\top = \vec{U} (\vec{\Sigma}^2) \vec{U}^T$$  
+Again, we get the same non-zero eigenvalues, with the rest $m-r$ being non-zero. 
+
+After finding the eigenvalues, the corresponding eigenvectors can also be computed, yielding $\vec{U}$ and $\vec{V}$. \\
+\begin{center}
+  $\therefore$ $\vec{A} = \vec{U\Sigma V^\top}$  
+\end{center}
+
+
+\\
+\begin{center}
+    \rule{10cm}{0.4pt}
+\end{center}
+\section{Background About Algorithms}
+
+The algorithms used to compute the Singular Value Decomposition do not compute it in the manner as stated above due to the following reason:
+\begin{itemize}
+    \item Computing $\vec{A^\top A}$ or $\vec{AA^\top}$ leads to numerical instability and loss of precision because it squares the condition number (which measures how sensitive the matrix is to small errors). 
+\end{itemize}
+
+There are mainly two classes of algorithms used for the computation of the Singular Value Decomposition of a Matrix:
+\begin{enumerate}
+    \item \textbf{Iterative Methods:}
+        \begin{itemize}
+            \item Only the required number of singular values are computed, directly resulting in the truncated SVD. 
+            \item The results are approximated progressively by convergence over iterations. 
+            \item Block Power Method is an example of iterative methods. 
+        \end{itemize}
+
+    \item \textbf{Direct Methods}
+        \begin{itemize}
+            \item Computes all the singular values and hence gives us the total SVD.
+            \item A finite sequence of operations are executed, leading to the full SVD. 
+            \item Golub-Reinsch Method and Jacobi Method are two examples of direct methods. 
+        \end{itemize}
+\end{enumerate}\\
+.\\
+\textbf{In the context of Image Compression:}\\
+To compress an image, we compute the truncated SVD of an input matrix, upto k singular values. Below are a few points of comparison between direct and iterative methods in this sense:
+\begin{itemize}
+    \item Direct methods calculate the total SVD and then truncation must be done. While iterative methods compute the truncated SVD directly. For $k<<min\{m,n\}$ iterative methods are much faster than direct methods. 
+    \item Direct methods are known to be more accurate as compared to iterative methods. However, the difference in accuracy is negligible in this context. There is very little distinguishable difference. 
+\end{itemize}
+
+So, overall, iterative methods have an edge when it comes to image compression. 
+
+\begin{center}
+    \rule{10cm}{0.4pt}
+\end{center}
+
+\section{Algorithm: Block SVD Power Method}
+Name and structure of the algorithm has been referred from \href{https://scispace.com/pdf/block-power-method-for-svd-decomposition-4wtqvmongz.pdf}{\textbf{Source}}
+
+This algorithm is different from the usual Block Power method for computing SVD. 
+
+\subsection{1. Outline of Algorithm:}
+
+$\vec{A} \in \mathbb{R}$ is the input matrix, which is obtained from the image. We need to get the truncated SVD upto k singular values $\vec{A_k} = \vec{U_k\Sigma_k V_k^\top}$ .\\ 
+
+Consider the initial assumption of $\vec{V_k}$ to be $\vec{V_0}$, which is a random $n \times k$ matrix. 
+$$\vec{Y} = \vec{AV_0}$$
+Upon QR decomposition of $\vec{Y}$, we get $\vec{Q_1}$ and $\vec{R_1}$.\\
+
+Fix our first assumption of $\vec{U_k}$ to be $\vec{U_0} = \vec{Q_1}$. \\
+
+Now, 
+$$\vec{Z} = \vec{A^\top U}$$
+Upon doing QR decomposition of $\vec{Z}$, we get $\vec{Q_2}$ and $\vec{R_2}$.\\ 
+
+Our second assumption of $\vec{V_k}$ becomes $\vec{Q_2}$. And $\vec{R_2}$ contains our current approximation of the singular values along its diagonal. \\
+
+Now the process is again followed from the initial step, but with $\vec{V_1}$ in place of $\vec{V_0}$. \\
+
+This process takes place as long as the convergence condition is not met or the maximum number of iterations is not crossed. \\
+
+For the convergence condition the sum of absolute difference between the elements of $\vec{R}$ (obtained from QR decomposition of $\vec{Z}$) and the corresponding elements of the $\vec{R}$ calculated in the previous iteration is found. The absolute sum of elements of the current $\vec{R}$ is also calculated. \\
+
+Once their division goes below a particular value, the loop stops running and our algorithm converges. \\
+
+If the convergence criterion is not met before the maximum iterations are over, the loop stops nonetheless. This is to ensure that the code doesn't run for too long. \\
+
+This however doesn't affect the image quality to a great deal, as verified through trial runs with my code. \\
+
+\textbf{NOTE:}\\
+For QR decomposition, the method that i have employed is the Modified Gram Schmidt Orthogonalisation process. It is considered to be more numerically stable than the Classical Gram Schmidt Orthogonalisation process. 
+
+\subsection{2. Pseudocode}
+
+The main function for the Block SVD Power Method, takes the input of the image matrix $\vec{A}$, which already has certain values. It takes the dimensions, m and n also as input. The empty matrices $\vec{U}, \vec{V}, \vec{S}$ are the ones which are filled in this function. 
+The function is a void function and hence doesnt return any value.
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\caption{Block SVD Power Method}
+\KwIn{Matrix $A_{m \times n}$, target rank $k$, Matrices $U$, $S$, $V$}
+{}
+
+$A^T \gets \text{transpose}(A)$\;
+$R \gets$ zero matrix of size $k \times k$\;
+$C \gets$ zero matrix of size $k \times k$\;
+
+\BlankLine
+\CommentSty{/* Initialize $V$ randomly between $-1$ and $1$ */}\\
+$V \gets$ new matrix of size $n \times k$\;
+\For{$i \gets 1$ \KwTo $n$}{
+    \For{$j \gets 1$ \KwTo $k$}{
+        $V_{ij} \gets 2 \times \text{rand()} - 1$\;
+    }
+}
+
+\BlankLine
+$err \gets 1$\;
+$val \gets 1$\;
+$iter \gets 0$\;
+
+\BlankLine
+\While{$err/val > 10^{-6}$ \textbf{and} $iter < 20$}{
+    $Y \gets A \times V$\;
+    $[U, R] \gets QR(Y)$\;
+    $Z \gets A^T \times U$\;
+    $[V, R] \gets QR(Z)$\;
+
+    $err \gets \sum |R - C|$\;
+    $val \gets \sum |R|$\;
+    $C \gets R$\;
+    $iter \gets iter + 1$\;
+}
+
+\BlankLine
+$S \gets R$\;
+\end{algorithm}
+
+\subsection{3. Mathematical Proof of Algorithm}
+
+\href{https://scispace.com/pdf/block-power-method-for-svd-decomposition-4wtqvmongz.pdf}{\textbf{Source}}
+
+Let $s$ be an integer and $q$ too such that $r = qs$ where $r$ is the rank of $\vec{A}$ and
+$$
+\sigma_1 \ge \dots \ge \sigma_s > \sigma_{s+1} \ge \dots \ge \sigma_{qs} > 0
+$$
+the singular values of $\vec{A}$.\\
+
+We are considering $q$ blocks of size $s$ each and splitting our total matrix into these blocks as 
+ $$\vec{A} = \sum_{i=1}^q \vec{U}_i \vec{\Sigma}_i \vec{V}_i^T$$
+ where $\vec{\Sigma}_i$ is a diagonal matrix with nonzero, monotonically decreasing diagonal $\sigma_{(i-1)s+1} \ge \sigma_{(i-1)s+2} \ge \dots \ge \sigma_{is} > 0$. $\vec{U}_i$ and $\vec{V}_i$ are the orthogonal matrices whose columns are respectively the corresponding left and right singular vectors.
+
+
+Let $\vec{V}_0 \in \mathbf{R}^{m \times s}$, is our first assumption of the matrix $\vec{V}$.\\
+$\vec{V}_0 = \sum_{i=1}^q \vec{V}_i \vec{X}_i + \vec{V}_0^*$, where $\vec{V}_0^*$ corresponds to the null-space of $\vec{A}$.\\
+We have
+$$
+\vec{W}_0 = \vec{A}\vec{V}_0 = \vec{U}_1\vec{\Sigma}_1\vec{X}_1 + \sum_{i=2}^q \vec{U}_i\vec{\Sigma}_i\vec{X}_i.
+$$
+Suppose that the component $\vec{X}_1 = \vec{I}_s$.\\
+\begin{align*}
+\vec{A}\vec{V}_0 &= \vec{U}_1 \vec{R}_1 \quad (\text{QR factorization}) \\
+\implies \vec{U}_1 \vec{R}_1&= \vec{U}_1\vec{\Sigma}_1 + \sum_{i=2}^q \vec{U}_i\vec{\Sigma}_i\vec{X}_i
+\end{align*}
+
+% $\vec{U}_1^T \vec{U}_1 \vec{R}_1 = \vec{\Sigma}_1$ that prove $\vec{R}_1$ is non singular and then
+$$
+\vec{U}_1 = \vec{U}_1\vec{\Sigma}_1\vec{R}_1^{-1} + \sum_{i=2}^q \vec{U}_i\vec{\Sigma}_i\vec{X}_i\vec{R}_1^{-1}
+$$
+Now,
+\begin{align*}
+\vec{A}^T\vec{U}_1 &= \vec{V}_1\vec{R}_2 \quad (\text{QR factorization}) \\
+\end{align*}
+
+We know $\vec{A^\top U_1} = \vec{V_1\Sigma}$
+
+\begin{align*}
+\implies \vec{V}_1\vec{R}_2 &= \vec{V}_1\vec{\Sigma}_1^2\vec{R}_1^{-1} + \sum_{i=2}^q \vec{V}_i\vec{\Sigma}_i^2\vec{X}_i\vec{R}_1^{-1}
+\end{align*}
+% $\vec{V}_1^T\vec{V}_1\vec{R}_2 = \vec{\Sigma}_1^2\vec{R}_1^{-1}$, $\vec{R}_2$ is non singular
+$$
+\vec{V}_1 = \vec{V}_1\vec{\Sigma}_1^2\vec{R}_1^{-1}\vec{R}_2^{-1} + \sum_{i=2}^q \vec{V}_i\vec{\Sigma}_i^2\vec{X}_i\vec{R}_1^{-1}\vec{R}_2^{-1}
+$$
+and so on, if we note $\vec{N}_t = \vec{R}_1^{-1}\vec{R}_2^{-1}\dots\vec{R}_t^{-1}$, at step $k$ we have
+% \begin{align*}
+% \vec{A}\vec{V}_{k-1} &= \vec{U}_k\vec{R}_{2k-1} \quad (\text{QR factorization}) \\
+% &= \vec{U}_1\vec{\Sigma}_1^{2k-1}\vec{N}_{2(k-1)} + \sum_{i=2}^q \vec{U}_i\vec{\Sigma}_i^{2k-1}\vec{X}_i\vec{N}_{2(k-1)}
+% \end{align*}
+$$
+\vec{U}_k = \vec{U}_1\vec{\Sigma}_1^{2k-1}\vec{N}_{2k-1} + \sum_{i=2}^q \vec{U}_i\vec{\Sigma}_i^{2k-1}\vec{X}_i\vec{N}_{2k-1}
+$$
+and
+% \begin{align*}
+% \vec{A}^T\vec{U}_k &= \vec{V}_k\vec{R}_{2k} \quad (\text{QR factorization}) \\
+% &= \vec{V}_1\vec{\Sigma}_1^{2k}\vec{N}_{2k-1} + \sum_{i=2}^q \vec{V}_i\vec{\Sigma}_i^{2k}\vec{X}_i\vec{N}_{2k-1}
+% \end{align*}
+$$
+\vec{V}_k = \vec{V}_1\vec{\Sigma}_1^{2k}\vec{N}_{2k} + \sum_{i=2}^q \vec{V}_i\vec{\Sigma}_i^{2k}\vec{X}_i\vec{N}_{2k}
+$$
+
+$\vec{U}_k$ and $\vec{V}_k$ are orthogonal matrices, then
+\begin{align*}
+\vec{I}_s = (\vec{U}_k)^T \vec{U}_k &= \vec{N}_{2k-1}^T\vec{\Sigma}_1^{4k-2}\vec{N}_{2k-1} + \sum_{i=2}^q \vec{N}_{2k-1}^T\vec{X}_i^T\vec{\Sigma}_i^{4k-2}\vec{X}_i\vec{N}_{2k-1} \\
+\vec{I}_s = (\vec{V}_k)^T \vec{V}_k &= \vec{N}_{2k}^T\vec{\Sigma}_1^{4k}\vec{N}_{2k} + \sum_{i=2}^q \vec{N}_{2k}^T\vec{X}_i^T\vec{\Sigma}_i^{4k}\vec{X}_i\vec{N}_{2k}
+\end{align*}
+by left and right-factoring, we obtain
+\begin{align*}
+\vec{I}_s &= \vec{N}_{2k-1}^T\vec{\Sigma}_1^{2k-1} \left( \vec{I}_s + \sum_{i=2}^q \vec{\Sigma}_1^{-2k+1}\vec{X}_i^T\vec{\Sigma}_i^{4k-2}\vec{X}_i\vec{\Sigma}_1^{-2k+1} \right) \vec{\Sigma}_1^{2k-1}\vec{N}_{2k-1} \\
+\vec{I}_s &= \vec{N}_{2k}^T\vec{\Sigma}_1^{2k} \left( \vec{I}_s + \sum_{i=2}^q \vec{\Sigma}_1^{-2k}\vec{X}_i^T\vec{\Sigma}_i^{4k}\vec{X}_i\vec{\Sigma}_1^{-2k} \right) \vec{\Sigma}_1^{2k}\vec{N}_{2k}
+\end{align*}
+Since $\|\vec{\Sigma}_s^{-1}\| = \frac{1}{\sigma_s}$ and $\|\vec{\Sigma}_i\| = \sigma_{(i-1)s+1}$ then,
+\begin{align*}
+\left\| \vec{\Sigma}_1^{-p}\vec{X}_i^T\vec{\Sigma}_i^{2p}\vec{X}_i\vec{\Sigma}_1^{-p} \right\| &\le \|\vec{\Sigma}_i\|^{2p} \|\vec{\Sigma}_1^{-1}\|^{2p} \|\vec{X}_i\|^2 \\
+&\le \left( \frac{\sigma_{(i-1)s+1}}{\sigma_s} \right)^{2p} \|\vec{X}_i\|^2 \xrightarrow{p \to \infty} 0
+\end{align*}
+Thus
+\[
+\lim_{p \to \infty} (\vec{N}_p^T\vec{\Sigma}_1^p) (\vec{\Sigma}_1^p\vec{N}_p) = \lim_{p \to \infty} (\vec{\Sigma}_1^p\vec{N}_p)^T (\vec{\Sigma}_1^p\vec{N}_p) = \vec{I}_s.
+\]
+Moreover, the matrix $\vec{\Sigma}_1^p\vec{N}_p$ is triangular with positive diagonal entries, then $\lim_{p \to \infty} \vec{\Sigma}_1^p\vec{N}_p = \lim_{p \to \infty} \vec{N}_p^{-1}\vec{\Sigma}_1^{-p} = \vec{I}_s$. Otherwise
+\begin{align*}
+\vec{A}^T\vec{U}_k \left( \vec{N}_{2k-1}^{-1}\vec{\Sigma}_1^{-(2k-1)} \right) \vec{\Sigma}_1^{-1} &= \vec{A}^T\vec{U}_k\vec{R}_{2k}^{-1} \left( \vec{N}_{2k}^{-1}\vec{\Sigma}_1^{-2k} \right) \\
+&= \vec{V}_k \left( \vec{N}_{2k}^{-1}\vec{\Sigma}_1^{-2k} \right) \\
+&= \vec{V}_1 + \sum_{i=2}^q \vec{V}_i\vec{\Sigma}_i^{2k}\vec{X}_i\vec{\Sigma}_1^{-2k} \xrightarrow{k \to \infty} \vec{V}_1
+\end{align*}
+\begin{align*}
+\vec{A}\vec{V}_k \left( \vec{N}_{2k}^{-1}\vec{\Sigma}_1^{-2k} \right) \vec{\Sigma}_1^{-1} &= \vec{A}\vec{V}_k\vec{R}_{2k+1}^{-1} \left( \vec{N}_{2k+1}^{-1}\vec{\Sigma}_1^{-(2k+1)} \right) \\
+&= \vec{U}_{k+1} \left( \vec{N}_{2k+1}^{-1}\vec{\Sigma}_1^{-(2k+1)} \right) \\
+&= \vec{U}_1 + \sum_{i=2}^q \vec{U}_i\vec{\Sigma}_i^{2k+1}\vec{X}_i\vec{\Sigma}_1^{-(2k+1)} \xrightarrow{k \to \infty} \vec{U}_1
+\end{align*}
+
+\begin{center}
+    \rule{10cm}{0.4pt}
+\end{center}
+
+\section{Comparing With Different Algorithms}
+
+\subsection{1. Golub-Reinsch Algorithm}
+It is a direct method for the computation of SVD. \\\\
+\textbf{Outline of the process:}
+\begin{itemize}
+    \item Matrix $\vec{A}$ is converted into bidiagonal matrix $\vec{B}$(only the main diagonal and one superdiagonal contain non-zero elements), using Householder Transformations on the left and right. It results in 
+    $$\vec{A} =  \vec{U_1BV_1^\top}$$
+    \item The bidiagonal matrix is converted to a diagonal matrix (the required $\Sigma$) using QR iterations resulting in:
+    $$\vec{B} = \vec{U_2\Sigma V_2^\top}$$
+    \item The Singular Value decomposition is given by
+    $$\vec{A} = \vec{U_1U_2\Sigma V_1^\top V_2^\top}$$
+    \item This is then brought down to the truncated form by considering only the first $k$ singular values and their corresponding right and left singular vectors. 
+\end{itemize}\\
+
+\textbf{Comparison:}\\
+
+\begin{itemize}
+    \item Block SVD Power Method directly gives the truncated SVD, upto k singular values, while the Golub-Reinsch Algorithm calculates the full SVD and then truncates it. 
+    \item The Block SVD Power Method is much faster compared to Golub-Reinsch when the value of $k<<min\{m,n\}$. 
+    \item When the value of $k$ is comparable to $m,n$, the Golub-Reinsch and the Block SVD Power Method take roughly the same amount of time to execute. 
+    \item The Block SVD Power Method is more straightforward, including only matrix multiplications, while the Golub-Reinsch Algorithm includes advanced methods like Householder transforms. 
+\end{itemize}
+
+\subsection{2. Block Power Method:}
+
+\begin{itemize}
+    \item The Block SVD Power Method has greater numerical precision than the usual Block Power Method.
+    \item The Block SVD Power Method computes both $\vec{U}$ and $\vec{V}$, while the Block Power Method computes only one and then calculates for the other. 
+    \item The Block SVD Power Method involves two QR decompositions per iteration and hence can be more taxing than the usual method. 
+\end{itemize}
+
+\subsection{3. Power Iteration + Deflation:}
+\begin{itemize}
+    \item Block SVD Power Method computes all k required singular values at once, while power iteration computes them one by one. 
+    \item This makes the former more efficient and fast. 
+\end{itemize}
+\begin{center}
+    \rule{10cm}{0.4pt}
+\end{center}
+\section{Reconstructed Images}
+
+\subsection{1. Einstein}
+
+Original Image
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/einstein.jpg}
+\end{figure}
+
+Reconstructed Images:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/einstein_5.jpg}
+\end{figure}
+\begin{center}
+    k=5
+\end{center}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/einstein_20.jpg}
+\end{figure}
+\begin{center}
+    k=20
+\end{center}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/einstein_50.jpg}
+\end{figure}
+\begin{center}
+    k=50
+\end{center}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/einstein_100.jpg}
+\end{figure}
+\begin{center}
+    k=100
+\end{center}
+
+\newpage
+\subsection{2. Globe}
+
+Original Image
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/globe.jpg}
+\end{figure}
+
+Reconstructed Images:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/globe_5.jpg}
+\end{figure}
+\begin{center}
+    k=5
+\end{center}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/globe_20.jpg}
+\end{figure}
+\begin{center}
+    k=20
+\end{center}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/globe_50.jpg}
+\end{figure}
+\begin{center}
+    k=50
+\end{center}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/globe_100.jpg}
+\end{figure}
+\begin{center}
+    k=100
+\end{center}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/globe_250.jpg}
+\end{figure}
+\begin{center}
+    k=250
+\end{center}
+
+\newpage
+\subsection{3. Greyscale}
+
+Original Image
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/greyscale.png}
+\end{figure}
+
+Reconstructed Images:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/greyscale_5.png}
+\end{figure}
+\begin{center}
+    k=5
+\end{center}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/greyscale_20.png}
+\end{figure}
+\begin{center}
+    k=20
+\end{center}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/greyscale_50.png}
+\end{figure}
+\begin{center}
+    k=50
+\end{center}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/greyscale_100.png}
+\end{figure}
+\begin{center}
+    k=100
+\end{center}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{figs/greyscale_400.png}
+\end{figure}
+\begin{center}
+    k=400
+\end{center}
+
+\begin{center}
+    \rule{10cm}{0.4pt}
+\end{center}
+
+\section{Error Analysis}
+
+\subsection{1. Einstein:}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\multicolumn{1}{|c|}{\textbf{$k$}} &
+\multicolumn{1}{|c|}{\textbf{Absolute Error ($||A - A_k||_F$)}} &
+\multicolumn{1}{|c|}{\textbf{Percentage error}} \\
+\hline
+5   & 4632.953 & 21.243 \\
+\hline
+20  & 2130.275 & 9.767  \\
+\hline
+50  & 887.268  & 4.068  \\
+\hline
+100 & 222.108  & 1.018  \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{2. Globe:}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\multicolumn{1}{|c|}{\textbf{$K$}} &
+\multicolumn{1}{|c|}{\textbf{Absolute error ($||A - A_k||$)}} &
+\multicolumn{1}{|c|}{\textbf{Percentage error}} \\
+\hline
+5   & 20500.153  & 12.94 \\
+\hline
+20  & 10,554.123 & 6.66  \\
+\hline
+50  & 6157.929   & 3.889 \\
+\hline
+100 & 5298.580   & 3.346 \\
+\hline
+250 & 1531.013   & 0.967 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{3. Greyscale:}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\multicolumn{1}{|c|}{\textbf{$k$}} &
+\multicolumn{1}{|c|}{\textbf{Absolute Error ($||A - A_k||_F$)}} &
+\multicolumn{1}{|c|}{\textbf{Percentage error}} \\
+\hline
+5   & 10,994.109 & 5.679 \\
+\hline
+20  & 3538.740   & 1.828 \\
+\hline
+50  & 1671.791   & 0.554 \\
+\hline
+100 & 537.845    & 0.277 \\
+\hline
+400 & 310.128    & 0.160 \\
+\hline
+\end{tabular}
+\end{table}
+
+\end{document}
